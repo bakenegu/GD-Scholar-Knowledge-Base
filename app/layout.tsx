@@ -5,9 +5,9 @@ import './globals.css'
 import { NoSSR } from '@/components/no-ssr'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  title: 'GD Scholar Knowledge Base',
+  description: 'Comprehensive database of academic programs and opportunities',
+  generator: 'Next.js',
 }
 
 export default function RootLayout({
