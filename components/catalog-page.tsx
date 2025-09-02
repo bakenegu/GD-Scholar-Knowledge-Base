@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -9,136 +9,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { getPrograms, type Program } from "@/lib/data"
 
 interface CatalogPageProps {
   isGuest: boolean
   onLogout: () => void
 }
 
-interface Product {
-  id: number
-  name: string
-  price: string
-  image: string
-  description: string
-  category: string
-  rating: number
-  destination?: string
-  studyLevel?: string
-  fieldOfStudy?: string
-  ieltsRequired?: boolean
-}
-
-// Sample product data
-const products: Product[] = [
-  {
-    id: 1,
-    name: "Computer Science BSc - USA",
-    price: "$25,000",
-    image: "/placeholder-logo.png",
-    description: "Bachelor's degree in Computer Science with focus on software engineering",
-    category: "Undergraduate",
-    rating: 4.8,
-    destination: "USA",
-    studyLevel: "Undergraduate",
-    fieldOfStudy: "Computer Science",
-    ieltsRequired: true
-  },
-  {
-    id: 2,
-    name: "MBA Program - UK",
-    price: "$35,000",
-    image: "/placeholder-logo.png",
-    description: "Master of Business Administration at a top UK university",
-    category: "Postgraduate",
-    rating: 4.7,
-    destination: "UK",
-    studyLevel: "Postgraduate",
-    fieldOfStudy: "Business",
-    ieltsRequired: true
-  },
-  {
-    id: 3,
-    name: "Mechanical Engineering MSc - Germany",
-    price: "$1,500",
-    image: "/placeholder-logo.png",
-    description: "Master's program in Mechanical Engineering with industry placement",
-    category: "Postgraduate",
-    rating: 4.6,
-    destination: "Germany",
-    studyLevel: "Postgraduate",
-    fieldOfStudy: "Engineering",
-    ieltsRequired: false
-  },
-  {
-    id: 4,
-    name: "Medicine MD - Australia",
-    price: "$45,000",
-    image: "/placeholder-logo.png",
-    description: "Doctor of Medicine program with clinical rotations",
-    category: "Postgraduate",
-    rating: 4.9,
-    destination: "Australia",
-    studyLevel: "Postgraduate",
-    fieldOfStudy: "Medicine",
-    ieltsRequired: true
-  },
-  {
-    id: 5,
-    name: "Arts & Humanities BA - Canada",
-    price: "$22,000",
-    image: "/placeholder-logo.png",
-    description: "Bachelor's degree in Arts & Humanities with various specialization options",
-    category: "Undergraduate",
-    rating: 4.5,
-    destination: "Canada",
-    studyLevel: "Undergraduate",
-    fieldOfStudy: "Arts",
-    ieltsRequired: true
-  },
-  {
-    id: 6,
-    name: "Data Science MSc - Canada",
-    price: "$28,000",
-    image: "/placeholder-logo.png",
-    description: "Master's program in Data Science with industry projects",
-    category: "Postgraduate",
-    rating: 4.7,
-    destination: "Canada",
-    studyLevel: "Postgraduate",
-    fieldOfStudy: "Computer Science",
-    ieltsRequired: true
-  },
-  {
-    id: 7,
-    name: "Business Administration BBA - Germany",
-    price: "$1,200",
-    image: "/placeholder-logo.png",
-    description: "Bachelor's in Business Administration with international focus",
-    category: "Undergraduate",
-    rating: 4.4,
-    destination: "Germany",
-    studyLevel: "Undergraduate",
-    fieldOfStudy: "Business",
-    ieltsRequired: false
-  },
-  {
-    id: 8,
-    name: "Environmental Science BSc - Canada",
-    price: "$24,500",
-    image: "/placeholder-logo.png",
-    description: "Bachelor's program focusing on environmental conservation and sustainability",
-    category: "Undergraduate",
-    rating: 4.6,
-    destination: "Canada",
-    studyLevel: "Undergraduate",
-    fieldOfStudy: "Environmental Science",
-    ieltsRequired: true
-  }
-]
+type Product = Program
 
 // Helper function to filter products
-const getFilteredProducts = (filters: {
+const getFilteredProducts = (products: Product[], filters: {
   searchTerm: string;
   selectedCategory: string;
   priceRange: [number, number];
@@ -207,6 +88,7 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("All")
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000])
+  const [programs, setPrograms] = useState<Product[]>([])
   
   // Filter states
   const [destination, setDestination] = useState("All")
@@ -216,7 +98,11 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
 
-  const filteredProducts = getFilteredProducts({
+  useEffect(() => {
+    setPrograms(getPrograms())
+  }, [])
+
+  const filteredProducts = getFilteredProducts(programs, {
     searchTerm,
     selectedCategory,
     priceRange,
@@ -226,12 +112,20 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
     ieltsRequired,
   });
 
+  // Group by destination (country)
+  const groups = filteredProducts.reduce<Record<string, Product[]>>((acc, p) => {
+    const key = p.destination || 'Other'
+    if (!acc[key]) acc[key] = []
+    acc[key].push(p)
+    return acc
+  }, {})
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="border-b border-border/50 sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 w-full">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 max-w-7xl">
           <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold">Scholar Catalog</h1>
+            <h1 className="text-2xl font-bold">GD Scholar Knowledge Base</h1>
             {isGuest && (
               <Badge variant="outline" className="bg-secondary/50">Guest Mode</Badge>
             )}
@@ -384,7 +278,7 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
             </div>
           </div>
 
-          {/* Results Grid */}
+          {/* Results grouped by Destination */}
           <div className="mb-12">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold text-foreground">Available Programs</h2>
@@ -409,47 +303,57 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
-                {filteredProducts.map((product) => (
-                  <Card key={product.id} className="group overflow-hidden hover:shadow-md transition-shadow w-full max-w-sm">
-                    <div className="aspect-square overflow-hidden bg-muted/20">
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
+              <div className="space-y-10">
+                {Object.entries(groups).map(([country, items]) => (
+                  <section key={country} className="w-full">
+                    <div className="flex items-baseline justify-between mb-3">
+                      <h3 className="text-base font-semibold">{country}</h3>
+                      <span className="text-xs text-muted-foreground">{items.length} {items.length === 1 ? 'program' : 'programs'}</span>
                     </div>
-                    <CardContent className="p-4 space-y-3">
-                      <div className="flex justify-between items-start">
-                        <h3 className="font-semibold text-lg">{product.name}</h3>
-                        <Badge variant="secondary">{product.category}</Badge>
-                      </div>
-                      <p className="text-muted-foreground text-sm line-clamp-2">
-                        {product.description}
-                      </p>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="font-bold">{product.price}</span>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="outline" className="text-xs">
-                            {product.destination}
-                          </Badge>
-                          <Badge variant={product.ieltsRequired ? 'default' : 'outline'} className="text-xs">
-                            {product.ieltsRequired ? 'IELTS Req.' : 'No IELTS'}
-                          </Badge>
-                        </div>
-                      </div>
-                      <Button
-                        className="w-full mt-2"
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedProduct(product)
-                          setDetailsOpen(true)
-                        }}
-                      >
-                        Read more
-                      </Button>
-                    </CardContent>
-                  </Card>
+                    <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                      {items.map((product) => (
+                        <Card key={product.id} className="group overflow-hidden hover:shadow-md transition-shadow w-[260px] shrink-0 snap-start">
+                          <div className="aspect-square overflow-hidden bg-muted/20">
+                            <img
+                              src={product.image}
+                              alt={product.name}
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
+                          </div>
+                          <CardContent className="p-3 space-y-2">
+                            <div className="flex justify-between items-start">
+                              <h4 className="font-semibold text-base leading-snug line-clamp-2">{product.name}</h4>
+                              <Badge variant="secondary" className="text-[10px] px-2 py-0">{product.category}</Badge>
+                            </div>
+                            <p className="text-muted-foreground text-xs line-clamp-2">
+                              {product.description}
+                            </p>
+                            <div className="flex items-center justify-between mt-1">
+                              <span className="font-bold text-sm">{product.price}</span>
+                              <div className="flex items-center space-x-2">
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                  {product.destination}
+                                </Badge>
+                                <Badge variant={product.ieltsRequired ? 'default' : 'outline'} className="text-[10px] px-1.5 py-0">
+                                  {product.ieltsRequired ? 'IELTS Req.' : 'No IELTS'}
+                                </Badge>
+                              </div>
+                            </div>
+                            <Button
+                              className="w-full mt-2"
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedProduct(product)
+                                setDetailsOpen(true)
+                              }}
+                            >
+                              Read more
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </section>
                 ))}
               </div>
             )}
