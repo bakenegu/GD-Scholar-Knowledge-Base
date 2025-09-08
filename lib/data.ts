@@ -15,6 +15,20 @@ export type Program = {
   ieltsRequired?: boolean
 }
 
+// New Destination data type for country/destination management
+export type Destination = {
+  id: string
+  country: string
+  // Basic Info
+  whyThisDestination: string
+  opportunitiesWhileStudying: string
+  opportunitiesAfterGraduation: string
+  // Admission Requirements (multi-valued)
+  documentsRequired: string[]
+  visaRequirements: string[]
+  internationalExamRequirements: string[]
+}
+
 export type User = {
   id: string
   name: string
@@ -24,6 +38,7 @@ export type User = {
 }
 
 const PROGRAMS_KEY = 'programs'
+const DESTINATIONS_KEY = 'destinations'
 const USERS_KEY = 'users'
 const SESSION_KEY = 'session_user'
 
@@ -154,6 +169,47 @@ export function getPrograms(): Program[] {
 export function savePrograms(list: Program[]) {
   if (!isBrowser()) return
   localStorage.setItem(PROGRAMS_KEY, JSON.stringify(list))
+}
+
+// Destinations
+export function ensureSeedDestinations() {
+  if (!isBrowser()) return [] as Destination[]
+  const raw = localStorage.getItem(DESTINATIONS_KEY)
+  if (raw) return JSON.parse(raw) as Destination[]
+  const seed: Destination[] = [
+    {
+      id: 'd1',
+      country: 'USA',
+      whyThisDestination: 'World-class universities, diverse culture, strong research opportunities.',
+      opportunitiesWhileStudying: 'On-campus jobs, internships with tech and finance companies, OPT for STEM.',
+      opportunitiesAfterGraduation: 'High demand in STEM and business sectors, global career pathways.',
+      documentsRequired: ['Passport', 'Academic transcripts', 'Proof of funds', 'English proficiency'],
+      visaRequirements: ['F-1 student visa', 'I-20 form', 'SEVIS fee receipt'],
+      internationalExamRequirements: ['IELTS/TOEFL', 'SAT/ACT for undergrad (some schools)', 'GRE/GMAT for grad (varies)'],
+    },
+    {
+      id: 'd2',
+      country: 'Canada',
+      whyThisDestination: 'Affordable education, safe environment, post-study work permits.',
+      opportunitiesWhileStudying: 'Co-op programs, part-time work up to 20 hours/week.',
+      opportunitiesAfterGraduation: 'PGWP leading to PR pathways in many provinces.',
+      documentsRequired: ['Passport', 'Acceptance letter', 'Proof of funds'],
+      visaRequirements: ['Study Permit', 'Biometrics', 'Medical exam (if required)'],
+      internationalExamRequirements: ['IELTS/TOEFL', 'Some programs may require GRE/GMAT'],
+    },
+  ]
+  localStorage.setItem(DESTINATIONS_KEY, JSON.stringify(seed))
+  return seed
+}
+
+export function getDestinations(): Destination[] {
+  if (!isBrowser()) return []
+  return ensureSeedDestinations()
+}
+
+export function saveDestinations(list: Destination[]) {
+  if (!isBrowser()) return
+  localStorage.setItem(DESTINATIONS_KEY, JSON.stringify(list))
 }
 
 // Users
