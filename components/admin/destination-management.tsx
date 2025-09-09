@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
+import { MarkdownEditor } from "./markdown-editor"
 import { getDestinations, saveDestinations, type Destination } from "@/lib/data"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
@@ -154,15 +155,27 @@ export function DestinationManagement() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label>Why this destination</Label>
-                  <Textarea value={form.whyThisDestination || ''} onChange={(e) => setForm(f => ({ ...f, whyThisDestination: e.target.value }))} placeholder="World-class universities, diverse culture..." />
+                  <MarkdownEditor
+                    value={form.whyThisDestination || ''}
+                    onChange={(v) => setForm(f => ({ ...f, whyThisDestination: v }))}
+                    placeholder="World-class universities, diverse culture..."
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label>Opportunities while studying</Label>
-                  <Textarea value={form.opportunitiesWhileStudying || ''} onChange={(e) => setForm(f => ({ ...f, opportunitiesWhileStudying: e.target.value }))} placeholder="Internships, co-op programs, on-campus jobs..." />
+                  <Label>Top Schools</Label>
+                  <MarkdownEditor
+                    value={form.opportunitiesWhileStudying || ''}
+                    onChange={(v) => setForm(f => ({ ...f, opportunitiesWhileStudying: v }))}
+                    placeholder="- Harvard University\n- MIT\n- Stanford University"
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label>Opportunities after graduation</Label>
-                  <Textarea value={form.opportunitiesAfterGraduation || ''} onChange={(e) => setForm(f => ({ ...f, opportunitiesAfterGraduation: e.target.value }))} placeholder="Post-study work permits, high demand sectors..." />
+                  <Label>Payment</Label>
+                  <MarkdownEditor
+                    value={form.opportunitiesAfterGraduation || ''}
+                    onChange={(v) => setForm(f => ({ ...f, opportunitiesAfterGraduation: v }))}
+                    placeholder="Tuition ranges, payment schedules, scholarship links..."
+                  />
                 </div>
               </div>
             </div>

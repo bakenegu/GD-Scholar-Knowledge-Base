@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { getDestinations, type Destination } from "@/lib/data"
+import { MarkdownRenderer } from "@/components/markdown-renderer"
 
 interface CatalogPageProps {
   isGuest: boolean
@@ -199,9 +200,10 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
                               <h4 className="font-semibold text-sm leading-tight line-clamp-1">{item.country}</h4>
                               <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5">{item.studyLevel}</Badge>
                             </div>
-                            <p className="text-muted-foreground text-xs line-clamp-2 leading-tight">
-                              {item.whyThisDestination}
-                            </p>
+                            <MarkdownRenderer
+                              content={item.whyThisDestination}
+                              className="text-muted-foreground text-xs max-h-10 overflow-hidden"
+                            />
                             <div className="flex items-center justify-between mt-1">
                               <div className="flex items-center space-x-1.5 text-[11px] text-muted-foreground">
                                 <span>{item.documentsRequired.length} docs</span>
@@ -247,7 +249,7 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
 
       {/* Details Dialog */}
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-6xl w-[1100px] max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {selectedItem?.country} — {selectedItem?.studyLevel}
@@ -258,21 +260,21 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
           </DialogHeader>
 
           <div className="space-y-6">
-            {/* Basic Info */}
+            {/* Details (Markdown) */}
             <section>
-              <h3 className="text-sm font-semibold mb-2">Basic Info</h3>
-              <div className="space-y-4 text-sm text-muted-foreground">
+              <h3 className="text-sm font-semibold mb-2">Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
                 <div>
-                  <p className="font-medium text-foreground mb-1">Why this destination</p>
-                  <p>{selectedItem?.whyThisDestination}</p>
+                  <p className="font-medium text-foreground mb-2">Why this destination</p>
+                  <MarkdownRenderer content={selectedItem?.whyThisDestination || ''} />
                 </div>
                 <div>
-                  <p className="font-medium text-foreground mb-1">Opportunities while studying</p>
-                  <p>{selectedItem?.opportunitiesWhileStudying}</p>
+                  <p className="font-medium text-foreground mb-2">Top Schools</p>
+                  <MarkdownRenderer content={selectedItem?.opportunitiesWhileStudying || ''} />
                 </div>
                 <div>
-                  <p className="font-medium text-foreground mb-1">Opportunities after graduation</p>
-                  <p>{selectedItem?.opportunitiesAfterGraduation}</p>
+                  <p className="font-medium text-foreground mb-2">Payment</p>
+                  <MarkdownRenderer content={selectedItem?.opportunitiesAfterGraduation || ''} />
                 </div>
               </div>
             </section>
