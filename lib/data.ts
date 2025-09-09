@@ -27,6 +27,10 @@ export type Destination = {
   documentsRequired: string[]
   visaRequirements: string[]
   internationalExamRequirements: string[]
+  // Study level for which this destination details apply
+  studyLevel: 'Undergraduate' | 'Postgraduate'
+  // Image URL to display on destination card
+  imageUrl?: string
 }
 
 export type User = {
@@ -175,8 +179,29 @@ export function savePrograms(list: Program[]) {
 export function ensureSeedDestinations() {
   if (!isBrowser()) return [] as Destination[]
   const raw = localStorage.getItem(DESTINATIONS_KEY)
-  if (raw) return JSON.parse(raw) as Destination[]
+  if (raw) {
+    // migrate existing records to include studyLevel if missing
+    const parsed = JSON.parse(raw) as any[]
+    const migrated: Destination[] = parsed.map((d, i) => ({
+      id: d.id ?? `d${i + 1}`,
+      country: d.country,
+      whyThisDestination: d.whyThisDestination ?? '',
+      opportunitiesWhileStudying: d.opportunitiesWhileStudying ?? '',
+      opportunitiesAfterGraduation: d.opportunitiesAfterGraduation ?? '',
+      documentsRequired: d.documentsRequired ?? [],
+      visaRequirements: d.visaRequirements ?? [],
+      internationalExamRequirements: d.internationalExamRequirements ?? [],
+      studyLevel: (d.studyLevel as Destination['studyLevel']) ?? 'Undergraduate',
+      imageUrl: d.imageUrl ?? '/placeholder-logo.png',
+    }))
+    // If we changed anything, save back
+    if (parsed.some(d => !('studyLevel' in d) || !('imageUrl' in d))) {
+      localStorage.setItem(DESTINATIONS_KEY, JSON.stringify(migrated))
+    }
+    return migrated
+  }
   const seed: Destination[] = [
+    // USA - Undergraduate
     {
       id: 'd1',
       country: 'USA',
@@ -186,7 +211,23 @@ export function ensureSeedDestinations() {
       documentsRequired: ['Passport', 'Academic transcripts', 'Proof of funds', 'English proficiency'],
       visaRequirements: ['F-1 student visa', 'I-20 form', 'SEVIS fee receipt'],
       internationalExamRequirements: ['IELTS/TOEFL', 'SAT/ACT for undergrad (some schools)', 'GRE/GMAT for grad (varies)'],
+      studyLevel: 'Undergraduate',
+      imageUrl: '/placeholder-logo.png',
     },
+    // USA - Postgraduate
+    {
+      id: 'd1p',
+      country: 'USA',
+      whyThisDestination: 'World-class universities, diverse culture, strong research opportunities.',
+      opportunitiesWhileStudying: 'On-campus jobs, internships with tech and finance companies, OPT for STEM.',
+      opportunitiesAfterGraduation: 'High demand in STEM and business sectors, global career pathways.',
+      documentsRequired: ['Passport', 'Academic transcripts', 'Proof of funds', 'English proficiency'],
+      visaRequirements: ['F-1 student visa', 'I-20 form', 'SEVIS fee receipt'],
+      internationalExamRequirements: ['IELTS/TOEFL', 'GRE/GMAT for grad (varies)'],
+      studyLevel: 'Postgraduate',
+      imageUrl: '/placeholder-logo.png',
+    },
+    // Canada - Undergraduate
     {
       id: 'd2',
       country: 'Canada',
@@ -195,7 +236,22 @@ export function ensureSeedDestinations() {
       opportunitiesAfterGraduation: 'PGWP leading to PR pathways in many provinces.',
       documentsRequired: ['Passport', 'Acceptance letter', 'Proof of funds'],
       visaRequirements: ['Study Permit', 'Biometrics', 'Medical exam (if required)'],
+      internationalExamRequirements: ['IELTS/TOEFL'],
+      studyLevel: 'Undergraduate',
+      imageUrl: '/placeholder-logo.png',
+    },
+    // Canada - Postgraduate
+    {
+      id: 'd2p',
+      country: 'Canada',
+      whyThisDestination: 'Affordable education, safe environment, post-study work permits.',
+      opportunitiesWhileStudying: 'Co-op programs, part-time work up to 20 hours/week.',
+      opportunitiesAfterGraduation: 'PGWP leading to PR pathways in many provinces.',
+      documentsRequired: ['Passport', 'Acceptance letter', 'Proof of funds'],
+      visaRequirements: ['Study Permit', 'Biometrics', 'Medical exam (if required)'],
       internationalExamRequirements: ['IELTS/TOEFL', 'Some programs may require GRE/GMAT'],
+      studyLevel: 'Postgraduate',
+      imageUrl: '/placeholder-logo.png',
     },
   ]
   localStorage.setItem(DESTINATIONS_KEY, JSON.stringify(seed))

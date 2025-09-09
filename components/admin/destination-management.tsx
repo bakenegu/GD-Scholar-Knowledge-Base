@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { getDestinations, saveDestinations, type Destination } from "@/lib/data"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export function DestinationManagement() {
   const [destinations, setDestinations] = useState<Destination[]>([])
@@ -21,6 +22,8 @@ export function DestinationManagement() {
     documentsRequired: [],
     visaRequirements: [],
     internationalExamRequirements: [],
+    studyLevel: 'Undergraduate',
+    imageUrl: '',
   })
 
   // temp inputs for tag-like fields
@@ -42,6 +45,8 @@ export function DestinationManagement() {
       documentsRequired: [],
       visaRequirements: [],
       internationalExamRequirements: [],
+      studyLevel: 'Undergraduate',
+      imageUrl: '',
     })
     setDocInput("")
     setVisaInput("")
@@ -85,6 +90,8 @@ export function DestinationManagement() {
         documentsRequired: form.documentsRequired || [],
         visaRequirements: form.visaRequirements || [],
         internationalExamRequirements: form.internationalExamRequirements || [],
+        studyLevel: (form.studyLevel as Destination['studyLevel']) || 'Undergraduate',
+        imageUrl: form.imageUrl || '/placeholder-logo.png',
       }
       const list = [...destinations, newDestination]
       setDestinations(list)
@@ -124,6 +131,24 @@ export function DestinationManagement() {
                 <div className="space-y-2">
                   <Label>Country</Label>
                   <Input value={form.country || ''} onChange={(e) => setForm(f => ({ ...f, country: e.target.value }))} placeholder="USA" required />
+                </div>
+                <div className="space-y-2">
+                  <Label>Study Level</Label>
+                  <Select value={(form.studyLevel as string) || 'Undergraduate'} onValueChange={(v) => setForm(f => ({ ...f, studyLevel: v as Destination['studyLevel'] }))}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Undergraduate">Undergraduate</SelectItem>
+                      <SelectItem value="Postgraduate">Postgraduate</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Image URL</Label>
+                  <Input value={form.imageUrl || ''} onChange={(e) => setForm(f => ({ ...f, imageUrl: e.target.value }))} placeholder="https://...your-image.jpg" />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -216,6 +241,7 @@ export function DestinationManagement() {
             <TableHeader>
               <TableRow>
                 <TableHead>Country</TableHead>
+                <TableHead>Level</TableHead>
                 <TableHead>Documents</TableHead>
                 <TableHead>Visa</TableHead>
                 <TableHead>Exams</TableHead>
@@ -226,6 +252,7 @@ export function DestinationManagement() {
               {destinations.map(d => (
                 <TableRow key={d.id}>
                   <TableCell className="font-medium">{d.country}</TableCell>
+                  <TableCell className="whitespace-nowrap">{d.studyLevel}</TableCell>
                   <TableCell className="max-w-[250px]">
                     <div className="flex flex-wrap gap-1">
                       {d.documentsRequired.slice(0, 4).map((t, i) => <Badge key={i} variant="outline">{t}</Badge>)}

@@ -3,13 +3,11 @@
 import { useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { getDestinations, type Destination } from "@/lib/data"
-import { Checkbox } from "@/components/ui/checkbox"
 
 interface CatalogPageProps {
   isGuest: boolean
@@ -18,37 +16,30 @@ interface CatalogPageProps {
 
 type Item = Destination
 
-// Helper function to filter destinations
-const getFilteredDestinations = (items: Item[], filters: {
-  searchTerm: string;
-  country: string;
-  documents: string[];
-  visas: string[];
-  exams: string[];
-}) => {
-  const { searchTerm, country, documents, visas, exams } = filters
+// Helper function to filter destinations by country and study level
+const getFilteredDestinations = (
+  items: Item[],
+  filters: {
+    country: string
+    studyLevel: 'All' | 'Undergraduate' | 'Postgraduate'
+  }
+) => {
+  const { country, studyLevel } = filters
   return items.filter((d) => {
-    const searchSpace = `${d.country} ${d.whyThisDestination} ${d.opportunitiesWhileStudying} ${d.opportunitiesAfterGraduation}`.toLowerCase()
-    const matchesSearch = !searchTerm || searchSpace.includes(searchTerm.toLowerCase())
     const matchesCountry = country === 'All' || d.country === country
-    const matchesDocs = documents.length === 0 || documents.every(val => d.documentsRequired.includes(val))
-    const matchesVisa = visas.length === 0 || visas.every(val => d.visaRequirements.includes(val))
-    const matchesExams = exams.length === 0 || exams.every(val => d.internationalExamRequirements.includes(val))
-    return matchesSearch && matchesCountry && matchesDocs && matchesVisa && matchesExams
+    const matchesLevel = studyLevel === 'All' || d.studyLevel === studyLevel
+    return matchesCountry && matchesLevel
   })
 }
 
 // (removed legacy constants for product catalog filtering)
 
 export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
-  const [searchTerm, setSearchTerm] = useState("")
   const [destinations, setDestinations] = useState<Item[]>([])
 
   // Filter states
   const [country, setCountry] = useState("All")
-  const [docFilter, setDocFilter] = useState<string[]>([])
-  const [visaFilter, setVisaFilter] = useState<string[]>([])
-  const [examFilter, setExamFilter] = useState<string[]>([])
+  const [studyLevel, setStudyLevel] = useState<'All' | 'Undergraduate' | 'Postgraduate'>("All")
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [selectedItem, setSelectedItem] = useState<Item | null>(null)
 
@@ -61,16 +52,9 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
     return ['All', ...Array.from(set)]
   }, [destinations])
 
-  const uniqueDocs = useMemo(() => Array.from(new Set(destinations.flatMap(d => d.documentsRequired))), [destinations])
-  const uniqueVisas = useMemo(() => Array.from(new Set(destinations.flatMap(d => d.visaRequirements))), [destinations])
-  const uniqueExams = useMemo(() => Array.from(new Set(destinations.flatMap(d => d.internationalExamRequirements))), [destinations])
-
   const filtered = getFilteredDestinations(destinations, {
-    searchTerm,
     country,
-    documents: docFilter,
-    visas: visaFilter,
-    exams: examFilter,
+    studyLevel,
   })
 
   const groups = filtered.reduce<Record<string, Item[]>>((acc, d) => {
@@ -106,21 +90,8 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
           {/* Filter Section */}
           <div className="mb-12 p-6 bg-muted/10 rounded-lg border border-border/30 shadow-sm">
             <h2 className="text-lg font-semibold mb-6">Filter Destinations</h2>
-
-            {/* First Row of Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-              {/* Search Input */}
-              <div className="space-y-2">
-                <Label htmlFor="search" className="text-sm font-medium">Search</Label>
-                <Input
-                  id="search"
-                  placeholder="Search destinations..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="bg-background"
-                />
-              </div>
-
+            {/* Filters: Country and Study Level */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Country Filter */}
               <div className="space-y-2">
                 <Label htmlFor="country" className="text-sm font-medium">Country</Label>
@@ -135,67 +106,20 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
                   </SelectContent>
                 </Select>
               </div>
-              {/* Placeholder to keep grid even */}
-              <div />
-            </div>
 
-            {/* Second Row of Filters: multi-select via checkboxes */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-              {/* Documents Required */}
+              {/* Study Level Filter */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Documents required</Label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-44 overflow-auto pr-1">
-                  {uniqueDocs.map((d) => (
-                    <label key={d} className="flex items-center gap-2 text-sm">
-                      <Checkbox
-                        checked={docFilter.includes(d)}
-                        onCheckedChange={(v) => {
-                          const checked = v === true
-                          setDocFilter(prev => checked ? [...prev, d] : prev.filter(x => x !== d))
-                        }}
-                      />
-                      {d}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Visa Requirements */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Visa requirements</Label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-44 overflow-auto pr-1">
-                  {uniqueVisas.map((v) => (
-                    <label key={v} className="flex items-center gap-2 text-sm">
-                      <Checkbox
-                        checked={visaFilter.includes(v)}
-                        onCheckedChange={(c) => {
-                          const checked = c === true
-                          setVisaFilter(prev => checked ? [...prev, v] : prev.filter(x => x !== v))
-                        }}
-                      />
-                      {v}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* International Exams */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">International exams</Label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-44 overflow-auto pr-1">
-                  {uniqueExams.map((e) => (
-                    <label key={e} className="flex items-center gap-2 text-sm">
-                      <Checkbox
-                        checked={examFilter.includes(e)}
-                        onCheckedChange={(c) => {
-                          const checked = c === true
-                          setExamFilter(prev => checked ? [...prev, e] : prev.filter(x => x !== e))
-                        }}
-                      />
-                      {e}
-                    </label>
-                  ))}
-                </div>
+                <Label htmlFor="level" className="text-sm font-medium">Study Level</Label>
+                <Select value={studyLevel} onValueChange={(v) => setStudyLevel(v as 'All' | 'Undergraduate' | 'Postgraduate')}>
+                  <SelectTrigger className="w-full bg-background">
+                    <SelectValue placeholder="Select study level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All Levels</SelectItem>
+                    <SelectItem value="Undergraduate">Undergraduate</SelectItem>
+                    <SelectItem value="Postgraduate">Postgraduate</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -205,14 +129,11 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
                 variant="outline"
                 className="w-full md:w-auto"
                 onClick={() => {
-                  setSearchTerm("")
-                  setCountry("All")
-                  setDocFilter([])
-                  setVisaFilter([])
-                  setExamFilter([])
+                  setCountry('All')
+                  setStudyLevel('All')
                 }}
               >
-                Clear All Filters
+                Clear Filters
               </Button>
             </div>
           </div>
@@ -222,22 +143,19 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold text-foreground">Available Destinations</h2>
               <p className="text-sm text-muted-foreground">
-                Showing {filtered.length} {filtered.length === 1 ? 'destination' : 'destinations'}
+                Showing {Object.values(groups).reduce((acc, items) => acc + items.length, 0)} destinations
               </p>
             </div>
 
             {filtered.length === 0 ? (
               <div className="text-center py-12 border rounded-lg">
-                <p className="text-muted-foreground">No products match your filters</p>
+                <p className="text-muted-foreground">No destinations match your filters</p>
                 <Button
                   variant="ghost"
                   className="mt-4"
                   onClick={() => {
-                    setSearchTerm('')
                     setCountry('All')
-                    setDocFilter([])
-                    setVisaFilter([])
-                    setExamFilter([])
+                    setStudyLevel('All')
                   }}
                 >
                   Clear filters
@@ -245,36 +163,55 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
               </div>
             ) : (
               <div className="space-y-10">
-                {Object.entries(groups).map(([country, items]) => (
+                {Object.entries(groups).map(([country, items]) => {
+                  // pick at most one UG and one PG per country
+                  const ug = items.find(i => i.studyLevel === 'Undergraduate')
+                  const pg = items.find(i => i.studyLevel === 'Postgraduate')
+                  let display: Item[] = []
+                  if (studyLevel === 'All') {
+                    display = [ug, pg].filter(Boolean) as Item[]
+                  } else if (studyLevel === 'Undergraduate') {
+                    display = ug ? [ug] : []
+                  } else {
+                    display = pg ? [pg] : []
+                  }
+                  if (display.length === 0) return null
+                  return (
                   <section key={country} className="w-full">
                     <div className="flex items-baseline justify-between mb-3">
                       <h3 className="text-base font-semibold">{country}</h3>
-                      <span className="text-xs text-muted-foreground">{items.length} {items.length === 1 ? 'destination' : 'destinations'}</span>
+                      <span className="text-xs text-muted-foreground">{display.length} {display.length === 1 ? 'destination' : 'destinations'}</span>
                     </div>
                     <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                      {items.map((item) => (
-                        <Card key={item.id} className="group overflow-hidden hover:shadow-md transition-shadow w-[260px] shrink-0 snap-start">
-                          <div className="aspect-square overflow-hidden bg-muted/20">
-                            <div className="w-full h-full flex items-center justify-center text-6xl">🌍</div>
+                      {display.map((item) => (
+                        <Card key={item.id} className="group overflow-hidden hover:shadow-md transition-shadow w-[220px] shrink-0 snap-start">
+                          <div className="overflow-hidden bg-muted/20 h-36">
+                            {item.imageUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={item.imageUrl} alt={`${item.country} ${item.studyLevel}`} className="w-full h-full object-contain" loading="lazy" />
+                            ) : (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src="/placeholder-logo.png" alt="Destination" className="w-full h-full object-contain" loading="lazy" />
+                            )}
                           </div>
-                          <CardContent className="p-3 space-y-2">
-                            <div className="flex justify-between items-start">
-                              <h4 className="font-semibold text-base leading-snug line-clamp-2">{item.country}</h4>
-                              <Badge variant="secondary" className="text-[10px] px-2 py-0">Destination</Badge>
+                          <CardContent className="p-2 space-y-1.5">
+                            <div className="flex justify-between items-center gap-2">
+                              <h4 className="font-semibold text-sm leading-tight line-clamp-1">{item.country}</h4>
+                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5">{item.studyLevel}</Badge>
                             </div>
-                            <p className="text-muted-foreground text-xs line-clamp-2">
+                            <p className="text-muted-foreground text-xs line-clamp-2 leading-tight">
                               {item.whyThisDestination}
                             </p>
                             <div className="flex items-center justify-between mt-1">
-                              <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                              <div className="flex items-center space-x-1.5 text-[11px] text-muted-foreground">
                                 <span>{item.documentsRequired.length} docs</span>
                                 <span>• {item.visaRequirements.length} visa</span>
                                 <span>• {item.internationalExamRequirements.length} exams</span>
                               </div>
                             </div>
                             <Button
-                              className="w-full mt-2"
-                              variant="outline"
+                              className="w-full mt-1.5 h-8 text-xs"
+                              variant="ghost"
                               onClick={() => {
                                 setSelectedItem(item)
                                 setDetailsOpen(true)
@@ -287,7 +224,7 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
                       ))}
                     </div>
                   </section>
-                ))}
+                )})}
               </div>
             )}
 
@@ -313,7 +250,7 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {selectedItem?.country}
+              {selectedItem?.country} — {selectedItem?.studyLevel}
             </DialogTitle>
             <DialogDescription>
               Why this destination
