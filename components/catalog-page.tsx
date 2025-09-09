@@ -68,7 +68,7 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="border-b border-border/50 sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 w-full">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4 max-w-7xl">
+        <div className="container mx-auto flex h-16 items-center justify-between px-6 lg:px-8 max-w-[1600px]">
           <div className="flex items-center space-x-4">
             <h1 className="text-2xl font-bold">GD Scholar Knowledge Base</h1>
             {isGuest && (
@@ -81,16 +81,16 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
         </div>
       </header>
 
-      <main className="flex-1 w-full py-8">
-        <div className="container mx-auto px-4 max-w-7xl">
+      <main className="flex-1 w-full py-10">
+        <div className="container mx-auto px-6 lg:px-10 max-w-[1600px]">
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold tracking-tight text-foreground">Study Destinations</h1>
-            <p className="text-muted-foreground mt-3 text-lg">Discover countries and their study opportunities</p>
+            <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-foreground leading-tight">Study Destinations</h1>
+            <p className="text-muted-foreground mt-3 text-lg leading-relaxed">Discover countries and their study opportunities</p>
           </div>
 
           {/* Filter Section */}
           <div className="mb-12 p-6 bg-muted/10 rounded-lg border border-border/30 shadow-sm">
-            <h2 className="text-lg font-semibold mb-6">Filter Destinations</h2>
+            <h2 className="text-2xl font-semibold mb-6 tracking-tight">Filter Destinations</h2>
             {/* Filters: Country and Study Level */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Country Filter */}
@@ -142,8 +142,8 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
           {/* Results grouped by Country */}
           <div className="mb-12">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-foreground">Available Destinations</h2>
-              <p className="text-sm text-muted-foreground">
+              <h2 className="text-3xl font-semibold text-foreground tracking-tight">Available Destinations</h2>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
                 Showing {Object.values(groups).reduce((acc, items) => acc + items.length, 0)} destinations
               </p>
             </div>
@@ -179,14 +179,14 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
                   if (display.length === 0) return null
                   return (
                   <section key={country} className="w-full">
-                    <div className="flex items-baseline justify-between mb-3">
-                      <h3 className="text-base font-semibold">{country}</h3>
+                    <div className="flex items-baseline justify-between mb-2">
+                      <h3 className="text-xl font-semibold tracking-tight">{country}</h3>
                       <span className="text-xs text-muted-foreground">{display.length} {display.length === 1 ? 'destination' : 'destinations'}</span>
                     </div>
-                    <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    <div className="flex gap-5 overflow-x-auto pb-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                       {display.map((item) => (
-                        <Card key={item.id} className="group overflow-hidden hover:shadow-md transition-shadow w-[220px] shrink-0 snap-start">
-                          <div className="overflow-hidden bg-muted/20 h-36">
+                        <Card key={item.id} className="group overflow-hidden hover:shadow-md transition-shadow w-[220px] shrink-0 snap-start py-3 gap-3">
+                          <div className="overflow-hidden bg-muted/20 h-24">
                             {item.imageUrl ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img src={item.imageUrl} alt={`${item.country} ${item.studyLevel}`} className="w-full h-full object-contain" loading="lazy" />
@@ -195,7 +195,7 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
                               <img src="/placeholder-logo.png" alt="Destination" className="w-full h-full object-contain" loading="lazy" />
                             )}
                           </div>
-                          <CardContent className="p-2 space-y-1.5">
+                          <CardContent className="p-1 space-y-1">
                             <div className="flex justify-between items-center gap-2">
                               <h4 className="font-semibold text-sm leading-tight line-clamp-1">{item.country}</h4>
                               <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5">{item.studyLevel}</Badge>
@@ -204,7 +204,7 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
                               content={item.whyThisDestination}
                               className="text-muted-foreground text-xs max-h-10 overflow-hidden"
                             />
-                            <div className="flex items-center justify-between mt-1">
+                            <div className="flex items-center justify-between mt-0.5">
                               <div className="flex items-center space-x-1.5 text-[11px] text-muted-foreground">
                                 <span>{item.documentsRequired.length} docs</span>
                                 <span>• {item.visaRequirements.length} visa</span>
@@ -212,7 +212,7 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
                               </div>
                             </div>
                             <Button
-                              className="w-full mt-1.5 h-8 text-xs"
+                              className="w-full mt-1 h-7 text-xs"
                               variant="ghost"
                               onClick={() => {
                                 setSelectedItem(item)
@@ -249,32 +249,29 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
 
       {/* Details Dialog */}
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <DialogContent className="max-w-6xl w-[1100px] max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="!w-[1000px] sm:!w-[1000px] !max-w-[1000px] sm:!max-w-[1000px] h-[90vh] max-h-[90vh] overflow-y-auto p-8">
+          <DialogHeader className="gap-0 mb-0 pb-0">
             <DialogTitle>
               {selectedItem?.country} — {selectedItem?.studyLevel}
             </DialogTitle>
-            <DialogDescription>
-              Why this destination
-            </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-6">
+          <div className="space-y-0">
             {/* Details (Markdown) */}
-            <section>
-              <h3 className="text-sm font-semibold mb-2">Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+            <section className="-mt-2">
+              <h3 className="sr-only">Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-1.5 text-sm">
                 <div>
-                  <p className="font-medium text-foreground mb-2">Why this destination</p>
-                  <MarkdownRenderer content={selectedItem?.whyThisDestination || ''} />
+                  <p className="font-medium text-foreground mb-0">Why this destination</p>
+                  <MarkdownRenderer className="prose-p:my-0 [&_p]:my-0 [&_h1]:my-0 [&_h2]:my-0 [&_h3]:my-0 [&_ul]:my-0" content={selectedItem?.whyThisDestination || ''} />
                 </div>
                 <div>
-                  <p className="font-medium text-foreground mb-2">Top Schools</p>
-                  <MarkdownRenderer content={selectedItem?.opportunitiesWhileStudying || ''} />
+                  <p className="font-medium text-foreground mb-0">Top Schools</p>
+                  <MarkdownRenderer className="prose-p:my-0 [&_p]:my-0 [&_h1]:my-0 [&_h2]:my-0 [&_h3]:my-0 [&_ul]:my-0" content={selectedItem?.opportunitiesWhileStudying || ''} />
                 </div>
                 <div>
-                  <p className="font-medium text-foreground mb-2">Payment</p>
-                  <MarkdownRenderer content={selectedItem?.opportunitiesAfterGraduation || ''} />
+                  <p className="font-medium text-foreground mb-0">Payment</p>
+                  <MarkdownRenderer className="prose-p:my-0 [&_p]:my-0 [&_h1]:my-0 [&_h2]:my-0 [&_h3]:my-0 [&_ul]:my-0" content={selectedItem?.opportunitiesAfterGraduation || ''} />
                 </div>
               </div>
             </section>
@@ -319,7 +316,7 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
       </Dialog>
 
       <footer className="border-t py-6 mt-auto w-full">
-        <div className="container mx-auto px-4 max-w-7xl">
+        <div className="container mx-auto px-6 max-w-screen-2xl">
           <p className="text-center text-sm text-muted-foreground">© {new Date().getFullYear()} Scholar Catalog. All rights reserved.</p>
         </div>
       </footer>
