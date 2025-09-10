@@ -256,30 +256,45 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-0">
-            {/* Details (Markdown) */}
-            <section className="-mt-2">
-              <h3 className="sr-only">Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-1.5 text-sm">
+          <div className="space-y-6">
+            {/* Basic Info */}
+            <section className="mt-2 border rounded-lg p-4">
+              <h3 className="text-sm font-semibold mb-3">Basic Info</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                <div className="space-y-1">
+                  <p className="text-muted-foreground">Country</p>
+                  <p className="font-medium">{selectedItem?.country}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-muted-foreground">Study Level</p>
+                  <p className="font-medium">{selectedItem?.studyLevel}</p>
+                </div>
+              </div>
+            </section>
+
+            {/* Overview */}
+            <section className="border rounded-lg p-4">
+              <h3 className="text-sm font-semibold mb-3">Overview</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
                 <div>
-                  <p className="font-medium text-foreground mb-0">Why this destination</p>
-                  <MarkdownRenderer className="prose-p:my-0 [&_p]:my-0 [&_h1]:my-0 [&_h2]:my-0 [&_h3]:my-0 [&_ul]:my-0" content={selectedItem?.whyThisDestination || ''} />
+                  <p className="font-medium text-foreground mb-1">Why this destination</p>
+                  <MarkdownRenderer className="prose-p:my-1 [&_p]:my-1 [&_ul]:my-1" content={selectedItem?.whyThisDestination || ''} />
                 </div>
                 <div>
-                  <p className="font-medium text-foreground mb-0">Top Schools</p>
-                  <MarkdownRenderer className="prose-p:my-0 [&_p]:my-0 [&_h1]:my-0 [&_h2]:my-0 [&_h3]:my-0 [&_ul]:my-0" content={selectedItem?.opportunitiesWhileStudying || ''} />
+                  <p className="font-medium text-foreground mb-1">Top Schools</p>
+                  <MarkdownRenderer className="prose-p:my-1 [&_p]:my-1 [&_ul]:my-1" content={selectedItem?.opportunitiesWhileStudying || ''} />
                 </div>
                 <div>
-                  <p className="font-medium text-foreground mb-0">Payment</p>
-                  <MarkdownRenderer className="prose-p:my-0 [&_p]:my-0 [&_h1]:my-0 [&_h2]:my-0 [&_h3]:my-0 [&_ul]:my-0" content={selectedItem?.opportunitiesAfterGraduation || ''} />
+                  <p className="font-medium text-foreground mb-1">Payment</p>
+                  <MarkdownRenderer className="prose-p:my-1 [&_p]:my-1 [&_ul]:my-1" content={selectedItem?.opportunitiesAfterGraduation || ''} />
                 </div>
               </div>
             </section>
 
             {/* Admission Requirements */}
-            <section>
-              <h3 className="text-sm font-semibold mb-2">Admission Requirements</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <section className="border rounded-lg p-4">
+              <h3 className="text-sm font-semibold mb-3">Admission Requirements</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
                 <div>
                   <p className="font-medium mb-2">Documents required</p>
                   <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
