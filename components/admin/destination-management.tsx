@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { MarkdownEditor } from "./markdown-editor"
-import { getDestinations, saveDestinations, type Destination } from "@/lib/data"
+import { type Destination } from "@/lib/data"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export function DestinationManagement() {
@@ -33,7 +33,16 @@ export function DestinationManagement() {
   const [examInput, setExamInput] = useState("")
 
   useEffect(() => {
-    setDestinations(getDestinations())
+    const load = async () => {
+      try {
+        const res = await fetch('/api/destinations', { cache: 'no-store' })
+        const data: Destination[] = await res.json()
+        setDestinations(data)
+      } catch (e) {
+        console.error('Failed to load destinations', e)
+      }
+    }
+    load()
   }, [])
 
   const resetForm = () => {
@@ -71,33 +80,49 @@ export function DestinationManagement() {
     })
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.country) return
 
     if (editing) {
-      const updated: Destination = { ...editing, ...(form as Destination) }
-      const list = destinations.map(d => d.id === editing.id ? updated : d)
-      setDestinations(list)
-      saveDestinations(list)
-      resetForm()
-    } else {
-      const newDestination: Destination = {
-        id: crypto.randomUUID(),
-        country: form.country!,
-        whyThisDestination: form.whyThisDestination || "",
-        opportunitiesWhileStudying: form.opportunitiesWhileStudying || "",
-        opportunitiesAfterGraduation: form.opportunitiesAfterGraduation || "",
-        documentsRequired: form.documentsRequired || [],
-        visaRequirements: form.visaRequirements || [],
-        internationalExamRequirements: form.internationalExamRequirements || [],
-        studyLevel: (form.studyLevel as Destination['studyLevel']) || 'Undergraduate',
-        imageUrl: form.imageUrl || '/placeholder-logo.png',
+      try {
+        const res = await fetch(`/api/destinations/${editing.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...editing, ...(form as Destination) }),
+        })
+        if (!res.ok) throw new Error('Failed to update')
+        const updated: Destination = await res.json()
+        setDestinations(prev => prev.map(d => d.id === updated.id ? updated : d))
+        resetForm()
+      } catch (err) {
+        console.error(err)
       }
-      const list = [...destinations, newDestination]
-      setDestinations(list)
-      saveDestinations(list)
-      resetForm()
+    } else {
+      try {
+        const payload: Partial<Destination> = {
+          country: form.country!,
+          whyThisDestination: form.whyThisDestination || "",
+          opportunitiesWhileStudying: form.opportunitiesWhileStudying || "",
+          opportunitiesAfterGraduation: form.opportunitiesAfterGraduation || "",
+          documentsRequired: form.documentsRequired || [],
+          visaRequirements: form.visaRequirements || [],
+          internationalExamRequirements: form.internationalExamRequirements || [],
+          studyLevel: (form.studyLevel as Destination['studyLevel']) || 'Undergraduate',
+          imageUrl: form.imageUrl || '/placeholder-logo.png',
+        }
+        const res = await fetch('/api/destinations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        if (!res.ok) throw new Error('Failed to create')
+        const created: Destination = await res.json()
+        setDestinations(prev => [...prev, created])
+        resetForm()
+      } catch (err) {
+        console.error(err)
+      }
     }
   }
 
@@ -106,11 +131,15 @@ export function DestinationManagement() {
     setForm({ ...d })
   }
 
-  const remove = (id: string) => {
-    const list = destinations.filter(d => d.id !== id)
-    setDestinations(list)
-    saveDestinations(list)
-    if (editing?.id === id) resetForm()
+  const remove = async (id: string) => {
+    try {
+      const res = await fetch(`/api/destinations/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Failed to delete')
+      setDestinations(prev => prev.filter(d => d.id !== id))
+      if (editing?.id === id) resetForm()
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   const total = useMemo(() => destinations.length, [destinations])

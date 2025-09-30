@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
-import { getDestinations, type Destination } from "@/lib/data"
+import { type Destination } from "@/lib/data"
 import { MarkdownRenderer } from "@/components/markdown-renderer"
 
 interface CatalogPageProps {
@@ -45,7 +45,16 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
   const [selectedItem, setSelectedItem] = useState<Item | null>(null)
 
   useEffect(() => {
-    setDestinations(getDestinations())
+    const load = async () => {
+      try {
+        const res = await fetch('/api/destinations', { cache: 'no-store' })
+        const data: Destination[] = await res.json()
+        setDestinations(data)
+      } catch (e) {
+        console.error('Failed to load destinations', e)
+      }
+    }
+    load()
   }, [])
 
   const allCountries = useMemo(() => {
@@ -163,7 +172,7 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
                 </Button>
               </div>
             ) : (
-              <div className="space-y-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {Object.entries(groups).map(([country, items]) => {
                   // pick at most one UG and one PG per country
                   const ug = items.find(i => i.studyLevel === 'Undergraduate')
@@ -183,10 +192,10 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
                       <h3 className="text-xl font-semibold tracking-tight">{country}</h3>
                       <span className="text-xs text-muted-foreground">{display.length} {display.length === 1 ? 'destination' : 'destinations'}</span>
                     </div>
-                    <div className="flex gap-5 overflow-x-auto pb-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {display.map((item) => (
-                        <Card key={item.id} className="group overflow-hidden hover:shadow-md transition-shadow w-[220px] shrink-0 snap-start py-3 gap-3">
-                          <div className="overflow-hidden bg-muted/20 h-24">
+                        <Card key={item.id} className="group overflow-hidden hover:shadow-md transition-shadow w-full py-3 gap-3">
+                          <div className="overflow-hidden bg-muted/20 h-16">
                             {item.imageUrl ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img src={item.imageUrl} alt={`${item.country} ${item.studyLevel}`} className="w-full h-full object-contain" loading="lazy" />
@@ -195,21 +204,10 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
                               <img src="/placeholder-logo.png" alt="Destination" className="w-full h-full object-contain" loading="lazy" />
                             )}
                           </div>
-                          <CardContent className="p-1 space-y-1">
+                          <CardContent className="p-2 space-y-1">
                             <div className="flex justify-between items-center gap-2">
                               <h4 className="font-semibold text-sm leading-tight line-clamp-1">{item.country}</h4>
                               <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5">{item.studyLevel}</Badge>
-                            </div>
-                            <MarkdownRenderer
-                              content={item.whyThisDestination}
-                              className="text-muted-foreground text-xs max-h-10 overflow-hidden"
-                            />
-                            <div className="flex items-center justify-between mt-0.5">
-                              <div className="flex items-center space-x-1.5 text-[11px] text-muted-foreground">
-                                <span>{item.documentsRequired.length} docs</span>
-                                <span>• {item.visaRequirements.length} visa</span>
-                                <span>• {item.internationalExamRequirements.length} exams</span>
-                              </div>
                             </div>
                             <Button
                               className="w-full mt-1 h-7 text-xs"
@@ -226,7 +224,7 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
                       ))}
                     </div>
                   </section>
-                )})}
+                  )})}
               </div>
             )}
 
