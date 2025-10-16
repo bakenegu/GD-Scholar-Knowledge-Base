@@ -172,7 +172,7 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="space-y-4">
                 {Object.entries(groups).map(([country, items]) => {
                   // pick at most one UG and one PG per country
                   const ug = items.find(i => i.studyLevel === 'Undergraduate')
@@ -187,43 +187,41 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
                   }
                   if (display.length === 0) return null
                   return (
-                  <section key={country} className="w-full">
-                    <div className="flex items-baseline justify-between mb-2">
-                      <h3 className="text-xl font-semibold tracking-tight">{country}</h3>
-                      <span className="text-xs text-muted-foreground">{display.length} {display.length === 1 ? 'destination' : 'destinations'}</span>
+                  <Card key={country} className="w-full p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      {display[0]?.imageUrl && (
+                        <div className="w-16 h-16 rounded overflow-hidden bg-muted/20 shrink-0">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={display[0].imageUrl} alt={country} className="w-full h-full object-contain" loading="lazy" />
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <h3 className="text-xl font-semibold tracking-tight">{country}</h3>
+                        <p className="text-xs text-muted-foreground">{display.length} {display.length === 1 ? 'program' : 'programs'} available</p>
+                      </div>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <ul className="space-y-2 ml-4 border-l-2 border-border pl-4">
                       {display.map((item) => (
-                        <Card key={item.id} className="group overflow-hidden hover:shadow-md transition-shadow w-full py-3 gap-3">
-                          <div className="overflow-hidden bg-muted/20 h-16">
-                            {item.imageUrl ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={item.imageUrl} alt={`${item.country} ${item.studyLevel}`} className="w-full h-full object-contain" loading="lazy" />
-                            ) : (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src="/placeholder-logo.png" alt="Destination" className="w-full h-full object-contain" loading="lazy" />
-                            )}
+                        <li key={item.id} className="flex items-center justify-between gap-3 p-2 rounded hover:bg-muted/50 transition-colors">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="text-[10px] px-2 py-0.5">{item.studyLevel}</Badge>
+                            <span className="text-sm font-medium">{item.studyLevel} Program</span>
                           </div>
-                          <CardContent className="p-2 space-y-1">
-                            <div className="flex justify-between items-center gap-2">
-                              <h4 className="font-semibold text-sm leading-tight line-clamp-1">{item.country}</h4>
-                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5">{item.studyLevel}</Badge>
-                            </div>
-                            <Button
-                              className="w-full mt-1 h-7 text-xs"
-                              variant="ghost"
-                              onClick={() => {
-                                setSelectedItem(item)
-                                setDetailsOpen(true)
-                              }}
-                            >
-                              Read more
-                            </Button>
-                          </CardContent>
-                        </Card>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 text-xs"
+                            onClick={() => {
+                              setSelectedItem(item)
+                              setDetailsOpen(true)
+                            }}
+                          >
+                            View Details
+                          </Button>
+                        </li>
                       ))}
-                    </div>
-                  </section>
+                    </ul>
+                  </Card>
                   )})}
               </div>
             )}
