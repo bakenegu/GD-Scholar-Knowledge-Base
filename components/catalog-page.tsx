@@ -204,7 +204,6 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
                       {display.map((item) => (
                         <li key={item.id} className="flex items-center justify-between gap-3 p-2 rounded hover:bg-muted/50 transition-colors">
                           <div className="flex items-center gap-2">
-                            <Badge variant="secondary" className="text-[10px] px-2 py-0.5">{item.studyLevel}</Badge>
                             <span className="text-sm font-medium">{item.studyLevel} Program</span>
                           </div>
                           <Button
