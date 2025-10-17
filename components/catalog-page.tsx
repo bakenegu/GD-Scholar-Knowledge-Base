@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { type Destination } from "@/lib/data"
 import { MarkdownRenderer } from "@/components/markdown-renderer"
 
@@ -16,6 +17,7 @@ interface CatalogPageProps {
 }
 
 type Item = Destination
+type Row = { no?: string; title?: string; description?: string }
 
 // Helper function to filter destinations by country and study level
 const getFilteredDestinations = (
@@ -73,6 +75,41 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
     acc[key].push(d)
     return acc
   }, {})
+
+  const parseRows = (value: unknown): Row[] => {
+    if (!value) return []
+
+    const normalize = (rows: unknown[]): Row[] => {
+      const out: Row[] = []
+      for (const item of rows) {
+        if (!item || typeof item !== 'object') continue
+        const record = item as Record<string, unknown>
+        const noRaw = record.no ?? record.number
+        const no = typeof noRaw === 'string' ? noRaw : typeof noRaw === 'number' ? String(noRaw) : undefined
+        const title = typeof record.title === 'string' ? record.title : undefined
+        const description = typeof record.description === 'string' ? record.description : undefined
+        if (title || description) out.push({ no, title, description })
+      }
+      return out
+    }
+
+    if (Array.isArray(value)) {
+      return normalize(value)
+    }
+
+    if (typeof value === 'string') {
+      const trimmed = value.trim()
+      if (!trimmed) return []
+      try {
+        const parsed = JSON.parse(trimmed)
+        return Array.isArray(parsed) ? normalize(parsed) : []
+      } catch {
+        return []
+      }
+    }
+
+    return []
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -270,19 +307,38 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
             {/* Overview */}
             <section className="border rounded-lg p-4">
               <h3 className="text-sm font-semibold mb-3">Overview</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
-                <div>
-                  <p className="font-medium text-foreground mb-1">Why this destination</p>
-                  <MarkdownRenderer className="prose-p:my-1 [&_p]:my-1 [&_ul]:my-1" content={selectedItem?.whyThisDestination || ''} />
-                </div>
-                <div>
-                  <p className="font-medium text-foreground mb-1">Top Schools</p>
-                  <MarkdownRenderer className="prose-p:my-1 [&_p]:my-1 [&_ul]:my-1" content={selectedItem?.opportunitiesWhileStudying || ''} />
-                </div>
-                <div>
-                  <p className="font-medium text-foreground mb-1">Payment</p>
-                  <MarkdownRenderer className="prose-p:my-1 [&_p]:my-1 [&_ul]:my-1" content={selectedItem?.opportunitiesAfterGraduation || ''} />
-                </div>
+              <div className="text-sm">
+                {(() => {
+                  const rows = parseRows(selectedItem?.whyThisDestination)
+                  if (rows.length > 0) {
+                    return (
+                      <Accordion type="multiple" className="w-full">
+                        {rows.map((r, i) => (
+                          <AccordionItem key={`ov-${i}`} value={`ov-${i}`}>
+                            <AccordionTrigger className="flex items-center justify-between gap-4 rounded-none px-4 py-3 text-sm font-medium text-left border border-border bg-muted hover:bg-muted/80 hover:underline">
+                              <span className="ud-accordion-panel-title">
+                                <span className="ud-heading-md">{r.title || 'Untitled'}</span>
+                              </span>
+                              {r.description ? (
+                                <span className="text-xs text-muted-foreground hidden sm:inline" data-purpose="section-content">
+                                  {(r.description || '').replace(/\s+/g, ' ').trim().slice(0, 60)}{(r.description || '').length > 60 ? '…' : ''}
+                                </span>
+                              ) : null}
+                            </AccordionTrigger>
+                            <AccordionContent className="px-0 pt-0">
+                              <div className="whitespace-pre-wrap border border-border rounded-none bg-background px-4 py-3 text-sm text-muted-foreground">
+                                {r.description || ''}
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        ))}
+                      </Accordion>
+                    )
+                  }
+                  return typeof selectedItem?.whyThisDestination === 'string'
+                    ? <MarkdownRenderer className="prose-p:my-1 [&_p]:my-1 [&_ul]:my-1" content={selectedItem?.whyThisDestination || ''} />
+                    : null
+                })()}
               </div>
             </section>
 

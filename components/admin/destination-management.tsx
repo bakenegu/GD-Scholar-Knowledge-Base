@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
-import { MarkdownEditor } from "./markdown-editor"
+// removed MarkdownEditor; using structured rows stored as JSON strings
 import { type Destination } from "@/lib/data"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
@@ -31,6 +31,38 @@ export function DestinationManagement() {
   const [docInput, setDocInput] = useState("")
   const [visaInput, setVisaInput] = useState("")
   const [examInput, setExamInput] = useState("")
+
+  // structured rows (stored as JSON string in string fields)
+  type Row = { no?: string; title?: string; description?: string }
+  const [whyRows, setWhyRows] = useState<Row[]>([])
+  const [whileRows, setWhileRows] = useState<Row[]>([])
+  const [afterRows, setAfterRows] = useState<Row[]>([])
+
+  // inputs for adding a single row at a time per section
+  const [whyNo, setWhyNo] = useState("")
+  const [whyTitle, setWhyTitle] = useState("")
+  const [whyDesc, setWhyDesc] = useState("")
+
+  const [whileNo, setWhileNo] = useState("")
+  const [whileTitle, setWhileTitle] = useState("")
+  const [whileDesc, setWhileDesc] = useState("")
+
+  const [afterNo, setAfterNo] = useState("")
+  const [afterTitle, setAfterTitle] = useState("")
+  const [afterDesc, setAfterDesc] = useState("")
+
+  const parseRows = (s?: string): Row[] => {
+    if (!s) return []
+    try {
+      const v = JSON.parse(s)
+      if (Array.isArray(v)) return v as Row[]
+      return []
+    } catch {
+      return []
+    }
+  }
+
+  const rowsToString = (rows: Row[]) => JSON.stringify(rows)
 
   useEffect(() => {
     const load = async () => {
@@ -61,6 +93,10 @@ export function DestinationManagement() {
     setDocInput("")
     setVisaInput("")
     setExamInput("")
+    setWhyRows([]); setWhileRows([]); setAfterRows([])
+    setWhyNo(""); setWhyTitle(""); setWhyDesc("")
+    setWhileNo(""); setWhileTitle(""); setWhileDesc("")
+    setAfterNo(""); setAfterTitle(""); setAfterDesc("")
   }
 
   const addTag = (key: keyof Pick<Destination, 'documentsRequired' | 'visaRequirements' | 'internationalExamRequirements'>, value: string) => {
@@ -89,7 +125,13 @@ export function DestinationManagement() {
         const res = await fetch(`/api/destinations/${editing.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...editing, ...(form as Destination) }),
+          body: JSON.stringify({
+            ...editing,
+            ...(form as Destination),
+            whyThisDestination: (whyRows.length > 0) ? rowsToString(whyRows) : (form.whyThisDestination || editing.whyThisDestination || ""),
+            opportunitiesWhileStudying: (whileRows.length > 0) ? rowsToString(whileRows) : (form.opportunitiesWhileStudying || editing.opportunitiesWhileStudying || ""),
+            opportunitiesAfterGraduation: (afterRows.length > 0) ? rowsToString(afterRows) : (form.opportunitiesAfterGraduation || editing.opportunitiesAfterGraduation || ""),
+          }),
         })
         if (!res.ok) throw new Error('Failed to update')
         const updated: Destination = await res.json()
@@ -102,9 +144,9 @@ export function DestinationManagement() {
       try {
         const payload: Partial<Destination> = {
           country: form.country!,
-          whyThisDestination: form.whyThisDestination || "",
-          opportunitiesWhileStudying: form.opportunitiesWhileStudying || "",
-          opportunitiesAfterGraduation: form.opportunitiesAfterGraduation || "",
+          whyThisDestination: (whyRows.length > 0) ? rowsToString(whyRows) : (form.whyThisDestination || ""),
+          opportunitiesWhileStudying: (whileRows.length > 0) ? rowsToString(whileRows) : (form.opportunitiesWhileStudying || ""),
+          opportunitiesAfterGraduation: (afterRows.length > 0) ? rowsToString(afterRows) : (form.opportunitiesAfterGraduation || ""),
           documentsRequired: form.documentsRequired || [],
           visaRequirements: form.visaRequirements || [],
           internationalExamRequirements: form.internationalExamRequirements || [],
@@ -129,6 +171,9 @@ export function DestinationManagement() {
   const startEdit = (d: Destination) => {
     setEditing(d)
     setForm({ ...d })
+    setWhyRows(parseRows(d.whyThisDestination))
+    setWhileRows(parseRows(d.opportunitiesWhileStudying))
+    setAfterRows(parseRows(d.opportunitiesAfterGraduation))
   }
 
   const remove = async (id: string) => {
@@ -181,30 +226,34 @@ export function DestinationManagement() {
                   <Input value={form.imageUrl || ''} onChange={(e) => setForm(f => ({ ...f, imageUrl: e.target.value }))} placeholder="https://...your-image.jpg" />
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4">
+                {/* Single table-like editor for overview items */}
                 <div className="space-y-2">
-                  <Label>Why this destination</Label>
-                  <MarkdownEditor
-                    value={form.whyThisDestination || ''}
-                    onChange={(v) => setForm(f => ({ ...f, whyThisDestination: v }))}
-                    placeholder="World-class universities, diverse culture..."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Top Schools</Label>
-                  <MarkdownEditor
-                    value={form.opportunitiesWhileStudying || ''}
-                    onChange={(v) => setForm(f => ({ ...f, opportunitiesWhileStudying: v }))}
-                    placeholder="- Harvard University\n- MIT\n- Stanford University"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Payment</Label>
-                  <MarkdownEditor
-                    value={form.opportunitiesAfterGraduation || ''}
-                    onChange={(v) => setForm(f => ({ ...f, opportunitiesAfterGraduation: v }))}
-                    placeholder="Tuition ranges, payment schedules, scholarship links..."
-                  />
+                  <Label>Overview items (Number, Title, Description)</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Input placeholder="#" value={whyNo} onChange={(e) => setWhyNo(e.target.value)} />
+                    <Input placeholder="Title" value={whyTitle} onChange={(e) => setWhyTitle(e.target.value)} />
+                    <Input placeholder="Description" value={whyDesc} onChange={(e) => setWhyDesc(e.target.value)} />
+                  </div>
+                  <div className="flex justify-end">
+                    <Button type="button" size="sm" onClick={() => {
+                      if (!whyTitle && !whyDesc) return
+                      const next = [...whyRows, { no: whyNo, title: whyTitle, description: whyDesc }]
+                      setWhyRows(next)
+                      setWhyNo(""); setWhyTitle(""); setWhyDesc("")
+                    }}>Add Row</Button>
+                  </div>
+                  <div className="space-y-1">
+                    {whyRows.map((r, i) => (
+                      <div key={i} className="flex items-center justify-between rounded border p-2 text-sm">
+                        <div className="flex-1 truncate">
+                          <span className="text-muted-foreground mr-2">{r.no}</span>
+                          <span className="font-medium">{r.title}</span>
+                        </div>
+                        <Button type="button" size="sm" variant="ghost" onClick={() => setWhyRows(prev => prev.filter((_, idx) => idx !== i))}>Remove</Button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
