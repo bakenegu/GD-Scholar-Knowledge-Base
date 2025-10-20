@@ -42,6 +42,7 @@ export function DestinationManagement() {
   const [whyNo, setWhyNo] = useState("")
   const [whyTitle, setWhyTitle] = useState("")
   const [whyDesc, setWhyDesc] = useState("")
+  const [whyEditingIndex, setWhyEditingIndex] = useState<number | null>(null)
 
   const [whileNo, setWhileNo] = useState("")
   const [whileTitle, setWhileTitle] = useState("")
@@ -97,6 +98,7 @@ export function DestinationManagement() {
     setWhyNo(""); setWhyTitle(""); setWhyDesc("")
     setWhileNo(""); setWhileTitle(""); setWhileDesc("")
     setAfterNo(""); setAfterTitle(""); setAfterDesc("")
+    setWhyEditingIndex(null)
   }
 
   const addTag = (key: keyof Pick<Destination, 'documentsRequired' | 'visaRequirements' | 'internationalExamRequirements'>, value: string) => {
@@ -174,6 +176,7 @@ export function DestinationManagement() {
     setWhyRows(parseRows(d.whyThisDestination))
     setWhileRows(parseRows(d.opportunitiesWhileStudying))
     setAfterRows(parseRows(d.opportunitiesAfterGraduation))
+    setWhyEditingIndex(null)
   }
 
   const remove = async (id: string) => {
@@ -235,13 +238,44 @@ export function DestinationManagement() {
                     <Input placeholder="Title" value={whyTitle} onChange={(e) => setWhyTitle(e.target.value)} />
                     <Input placeholder="Description" value={whyDesc} onChange={(e) => setWhyDesc(e.target.value)} />
                   </div>
-                  <div className="flex justify-end">
-                    <Button type="button" size="sm" onClick={() => {
-                      if (!whyTitle && !whyDesc) return
-                      const next = [...whyRows, { no: whyNo, title: whyTitle, description: whyDesc }]
-                      setWhyRows(next)
-                      setWhyNo(""); setWhyTitle(""); setWhyDesc("")
-                    }}>Add Row</Button>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => {
+                        if (!whyTitle && !whyDesc) return
+                        if (whyEditingIndex !== null) {
+                          setWhyRows(prev => {
+                            const next = [...prev]
+                            next[whyEditingIndex] = { no: whyNo, title: whyTitle, description: whyDesc }
+                            return next
+                          })
+                        } else {
+                          setWhyRows(prev => [...prev, { no: whyNo, title: whyTitle, description: whyDesc }])
+                        }
+                        setWhyEditingIndex(null)
+                        setWhyNo("")
+                        setWhyTitle("")
+                        setWhyDesc("")
+                      }}
+                    >
+                      {whyEditingIndex !== null ? 'Save Row' : 'Add Row'}
+                    </Button>
+                    {whyEditingIndex !== null && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setWhyEditingIndex(null)
+                          setWhyNo("")
+                          setWhyTitle("")
+                          setWhyDesc("")
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    )}
                   </div>
                   <div className="space-y-1">
                     {whyRows.map((r, i) => (
@@ -250,7 +284,41 @@ export function DestinationManagement() {
                           <span className="text-muted-foreground mr-2">{r.no}</span>
                           <span className="font-medium">{r.title}</span>
                         </div>
-                        <Button type="button" size="sm" variant="ghost" onClick={() => setWhyRows(prev => prev.filter((_, idx) => idx !== i))}>Remove</Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setWhyEditingIndex(i)
+                              setWhyNo(r.no || "")
+                              setWhyTitle(r.title || "")
+                              setWhyDesc(r.description || "")
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              setWhyRows(prev => prev.filter((_, idx) => idx !== i))
+                              setWhyEditingIndex(prevIdx => {
+                                if (prevIdx === null) return prevIdx
+                                if (prevIdx === i) {
+                                  setWhyNo("")
+                                  setWhyTitle("")
+                                  setWhyDesc("")
+                                  return null
+                                }
+                                return prevIdx > i ? prevIdx - 1 : prevIdx
+                              })
+                            }}
+                          >
+                            Remove
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>

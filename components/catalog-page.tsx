@@ -130,8 +130,8 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
       <main className="flex-1 w-full py-10">
         <div className="container mx-auto px-6 lg:px-10 max-w-[1600px]">
           <div className="text-center mb-12">
-            <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-foreground leading-tight">Study Destinations</h1>
-            <p className="text-muted-foreground mt-3 text-lg leading-relaxed">Discover countries and their study opportunities</p>
+            <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground leading-tight">Study Destinations</h1>
+            <p className="text-muted-foreground mt-2 text-sm leading-relaxed">Discover countries and their study opportunities</p>
           </div>
 
           {/* Filter Section */}
@@ -209,7 +209,7 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
                 </Button>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Object.entries(groups).map(([country, items]) => {
                   // pick at most one UG and one PG per country
                   const ug = items.find(i => i.studyLevel === 'Undergraduate')
