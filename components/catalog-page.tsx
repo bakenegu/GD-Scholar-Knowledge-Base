@@ -211,12 +211,14 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Object.entries(groups).map(([country, items]) => {
-                  // pick at most one UG and one PG per country
+                  // pick a representative program (no UG/PG categories shown to users)
                   const ug = items.find(i => i.studyLevel === 'Undergraduate')
                   const pg = items.find(i => i.studyLevel === 'Postgraduate')
                   let display: Item[] = []
                   if (studyLevel === 'All') {
-                    display = [ug, pg].filter(Boolean) as Item[]
+                    // prefer Undergraduate as representative, fallback to Postgraduate, else first
+                    const rep = ug || pg || items[0]
+                    display = rep ? [rep] : []
                   } else if (studyLevel === 'Undergraduate') {
                     display = ug ? [ug] : []
                   } else {
@@ -238,24 +240,24 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
                       </div>
                     </div>
                     <ul className="space-y-2 ml-4 border-l-2 border-border pl-4">
-                      {display.map((item) => (
-                        <li key={item.id} className="flex items-center justify-between gap-3 p-2 rounded hover:bg-muted/50 transition-colors">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">{item.studyLevel} Program</span>
-                          </div>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 text-xs"
-                            onClick={() => {
-                              setSelectedItem(item)
-                              setDetailsOpen(true)
-                            }}
-                          >
-                            View Details
-                          </Button>
-                        </li>
-                      ))}
+                      <li className="flex items-center justify-between gap-3 p-2 rounded hover:bg-muted/50 transition-colors">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">Programs</span>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 text-xs"
+                          onClick={() => {
+                            const item = display[0]
+                            if (!item) return
+                            setSelectedItem(item)
+                            setDetailsOpen(true)
+                          }}
+                        >
+                          View Details
+                        </Button>
+                      </li>
                     </ul>
                   </Card>
                   )})}
@@ -284,7 +286,7 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
         <DialogContent className="!w-[1000px] sm:!w-[1000px] !max-w-[1000px] sm:!max-w-[1000px] h-[90vh] max-h-[90vh] overflow-y-auto p-8">
           <DialogHeader className="gap-0 mb-0 pb-0">
             <DialogTitle>
-              {selectedItem?.country} — {selectedItem?.studyLevel}
+              {selectedItem?.country}
             </DialogTitle>
           </DialogHeader>
 
@@ -297,10 +299,6 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
                   <p className="text-muted-foreground">Country</p>
                   <p className="font-medium">{selectedItem?.country}</p>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-muted-foreground">Study Level</p>
-                  <p className="font-medium">{selectedItem?.studyLevel}</p>
-                </div>
               </div>
             </section>
 
@@ -312,7 +310,7 @@ export function CatalogPage({ isGuest, onLogout }: CatalogPageProps) {
                   const rows = parseRows(selectedItem?.whyThisDestination)
                   if (rows.length > 0) {
                     return (
-                      <Accordion type="multiple" className="w-full">
+                      <Accordion type="multiple" defaultValue={[`ov-0`]} className="w-full">
                         {rows.map((r, i) => (
                           <AccordionItem key={`ov-${i}`} value={`ov-${i}`}>
                             <AccordionTrigger className="flex items-center justify-between gap-4 rounded-none px-4 py-3 text-sm font-medium text-left border border-border bg-muted hover:bg-muted/80 hover:underline">

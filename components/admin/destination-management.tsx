@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 // removed MarkdownEditor; using structured rows stored as JSON strings
 import { type Destination } from "@/lib/data"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+// removed Select UI for study level
 
 export function DestinationManagement() {
   const [destinations, setDestinations] = useState<Destination[]>([])
@@ -130,6 +130,8 @@ export function DestinationManagement() {
           body: JSON.stringify({
             ...editing,
             ...(form as Destination),
+            // keep or default study level silently
+            studyLevel: editing.studyLevel || 'Undergraduate',
             whyThisDestination: (whyRows.length > 0) ? rowsToString(whyRows) : (form.whyThisDestination || editing.whyThisDestination || ""),
             opportunitiesWhileStudying: (whileRows.length > 0) ? rowsToString(whileRows) : (form.opportunitiesWhileStudying || editing.opportunitiesWhileStudying || ""),
             opportunitiesAfterGraduation: (afterRows.length > 0) ? rowsToString(afterRows) : (form.opportunitiesAfterGraduation || editing.opportunitiesAfterGraduation || ""),
@@ -152,7 +154,8 @@ export function DestinationManagement() {
           documentsRequired: form.documentsRequired || [],
           visaRequirements: form.visaRequirements || [],
           internationalExamRequirements: form.internationalExamRequirements || [],
-          studyLevel: (form.studyLevel as Destination['studyLevel']) || 'Undergraduate',
+          // default silently
+          studyLevel: 'Undergraduate',
           imageUrl: form.imageUrl || '/placeholder-logo.png',
         }
         const res = await fetch('/api/destinations', {
@@ -206,21 +209,9 @@ export function DestinationManagement() {
                 <h3 className="font-semibold">Basic Info</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
+                <div className="space-y-2 md:col-span-2">
                   <Label>Country</Label>
                   <Input value={form.country || ''} onChange={(e) => setForm(f => ({ ...f, country: e.target.value }))} placeholder="USA" required />
-                </div>
-                <div className="space-y-2">
-                  <Label>Study Level</Label>
-                  <Select value={(form.studyLevel as string) || 'Undergraduate'} onValueChange={(v) => setForm(f => ({ ...f, studyLevel: v as Destination['studyLevel'] }))}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Undergraduate">Undergraduate</SelectItem>
-                      <SelectItem value="Postgraduate">Postgraduate</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -400,7 +391,7 @@ export function DestinationManagement() {
             <TableHeader>
               <TableRow>
                 <TableHead>Country</TableHead>
-                <TableHead>Level</TableHead>
+                {/* Level removed */}
                 <TableHead>Documents</TableHead>
                 <TableHead>Visa</TableHead>
                 <TableHead>Exams</TableHead>
@@ -411,7 +402,7 @@ export function DestinationManagement() {
               {destinations.map(d => (
                 <TableRow key={d.id}>
                   <TableCell className="font-medium">{d.country}</TableCell>
-                  <TableCell className="whitespace-nowrap">{d.studyLevel}</TableCell>
+                  {/* Level removed */}
                   <TableCell className="max-w-[250px]">
                     <div className="flex flex-wrap gap-1">
                       {d.documentsRequired.slice(0, 4).map((t, i) => <Badge key={i} variant="outline">{t}</Badge>)}
